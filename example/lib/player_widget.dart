@@ -115,9 +115,16 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                 children: [
                   Slider(
                     onChanged: (v) {
-                      final Position = v * _duration!.inMilliseconds;
-                      _audioPlayer
-                          .seek(Duration(milliseconds: Position.round()));
+                      if (_duration != null) {
+                        final Position = v * _duration!.inMilliseconds;
+                        _audioPlayer
+                            .seek(Duration(milliseconds: Position.round()));
+                      }
+                      //Previously there was no null-check - not sure
+                      //how to handle else case.
+                      else {
+                        print("_duration is null");
+                      }
                     },
                     value: (_position != null &&
                             _duration != null &&

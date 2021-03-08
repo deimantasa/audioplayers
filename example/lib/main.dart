@@ -153,15 +153,19 @@ class _ExampleAppState extends State<ExampleApp> {
   }
 
   Future<int> _getDuration() async {
-    File audiofile = await (audioCache.load('audio2.mp3') as FutureOr<File>);
-    await advancedPlayer.setUrl(
-      audiofile.path,
-    );
-    int duration = await Future.delayed(
-      Duration(seconds: 2),
-      () => advancedPlayer.getDuration(),
-    );
-    return duration;
+    File? audioFile = await audioCache.load('audio2.mp3');
+    if (audioFile != null) {
+      await advancedPlayer.setUrl(audioFile.path);
+      int duration = await Future.delayed(
+        Duration(seconds: 2),
+        () => advancedPlayer.getDuration(),
+      );
+      return duration;
+    }
+    //If audio file is null, return duration as 0
+    else {
+      return 0;
+    }
   }
 
   getLocalFileDuration() {
@@ -294,8 +298,8 @@ class _AdvancedState extends State<Advanced> {
                 ),
                 _Btn(
                   txt: 'RELEASE',
-                  onPressed: () =>
-                      widget.advancedPlayer!.setReleaseMode(ReleaseMode.RELEASE),
+                  onPressed: () => widget.advancedPlayer!
+                      .setReleaseMode(ReleaseMode.RELEASE),
                 ),
               ], mainAxisAlignment: MainAxisAlignment.spaceEvenly),
             ],

@@ -189,7 +189,11 @@ class AudioCache {
     if (kIsWeb) {
       return 'assets/$prefix$fileName';
     }
-    File file = await (load(fileName) as FutureOr<File>);
-    return file.path;
+    File? file = await load(fileName);
+    if (file != null) {
+      return file.path;
+    } else {
+      throw Exception("file is null");
+    }
   }
 }
