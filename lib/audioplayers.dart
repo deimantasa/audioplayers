@@ -10,9 +10,9 @@ import 'package:uuid/uuid.dart';
 
 typedef StreamController CreateStreamController();
 typedef void TimeChangeHandler(Duration duration);
-typedef void SeekHandler(bool finished);
-typedef void ErrorHandler(String message);
-typedef void AudioPlayerStateChangeHandler(AudioPlayerState state);
+typedef void SeekHandler(bool? finished);
+typedef void ErrorHandler(String? message);
+typedef void AudioPlayerStateChangeHandler(AudioPlayerState? state);
 
 /// This enum is meant to be used as a parameter of [setReleaseMode] method.
 ///
@@ -96,19 +96,19 @@ void _backgroundCallbackDispatcher() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Reference to the onAudioChangeBackgroundEvent callback.
-  Function(AudioPlayerState) onAudioChangeBackgroundEvent;
+  Function(AudioPlayerState)? onAudioChangeBackgroundEvent;
 
   // This is where the magic happens and we handle background events from the
   // native portion of the plugin. Here we message the audio notification data
   // which we then pass to the provided callback.
   _channel.setMethodCallHandler((MethodCall call) async {
-    Function _performCallbackLookup() {
+    Function? _performCallbackLookup() {
       final CallbackHandle handle = CallbackHandle.fromRawHandle(
           call.arguments['updateHandleMonitorKey']);
 
       // PluginUtilities.getCallbackFromHandle performs a lookup based on the
       // handle we retrieved earlier.
-      final Function closure = PluginUtilities.getCallbackFromHandle(handle);
+      final Function? closure = PluginUtilities.getCallbackFromHandle(handle);
 
       if (closure == null) {
         print('Fatal Error: Callback lookup failed!');
@@ -117,16 +117,16 @@ void _backgroundCallbackDispatcher() {
       return closure;
     }
 
-    final Map<dynamic, dynamic> callArgs = call.arguments as Map;
+    final Map<dynamic, dynamic>? callArgs = call.arguments as Map?;
     if (call.method == 'audio.onNotificationBackgroundPlayerStateChanged') {
-      onAudioChangeBackgroundEvent ??= _performCallbackLookup();
-      final String playerState = callArgs['value'];
+      onAudioChangeBackgroundEvent ??= _performCallbackLookup() as dynamic Function(AudioPlayerState)?;
+      final String? playerState = callArgs!['value'];
       if (playerState == 'playing') {
-        onAudioChangeBackgroundEvent(AudioPlayerState.PLAYING);
+        onAudioChangeBackgroundEvent!(AudioPlayerState.PLAYING);
       } else if (playerState == 'paused') {
-        onAudioChangeBackgroundEvent(AudioPlayerState.PAUSED);
+        onAudioChangeBackgroundEvent!(AudioPlayerState.PAUSED);
       } else if (playerState == 'completed') {
-        onAudioChangeBackgroundEvent(AudioPlayerState.COMPLETED);
+        onAudioChangeBackgroundEvent!(AudioPlayerState.COMPLETED);
       }
     } else {
       assert(false, "No handler defined for method type: '${call.method}'");
@@ -147,8 +147,8 @@ class AudioPlayer {
 
   static final _uuid = Uuid();
 
-  final StreamController<AudioPlayerState> _playerStateController =
-      StreamController<AudioPlayerState>.broadcast();
+  final StreamController<AudioPlayerState?> _playerStateController =
+      StreamController<AudioPlayerState?>.broadcast();
 
   final StreamController<AudioPlayerState> _notificationPlayerStateController =
       StreamController<AudioPlayerState>.broadcast();
@@ -162,11 +162,11 @@ class AudioPlayer {
   final StreamController<void> _completionController =
       StreamController<void>.broadcast();
 
-  final StreamController<bool> _seekCompleteController =
-      StreamController<bool>.broadcast();
+  final StreamController<bool?> _seekCompleteController =
+      StreamController<bool?>.broadcast();
 
-  final StreamController<String> _errorController =
-      StreamController<String>.broadcast();
+  final StreamController<String?> _errorController =
+      StreamController<String?>.broadcast();
 
   final StreamController<PlayerControlCommand> _commandController =
       StreamController<PlayerControlCommand>.broadcast();
@@ -177,16 +177,16 @@ class AudioPlayer {
   ///
   /// This is used to exchange messages with the [MethodChannel]
   /// (there is only one).
-  static final players = Map<String, AudioPlayer>();
+  static final players = Map<String?, AudioPlayer>();
 
   /// Enables more verbose logging.
   static bool logEnabled = false;
 
-  AudioPlayerState _audioPlayerState;
+  AudioPlayerState? _audioPlayerState;
 
-  AudioPlayerState get state => _audioPlayerState;
+  AudioPlayerState? get state => _audioPlayerState;
 
-  set state(AudioPlayerState state) {
+  set state(AudioPlayerState? state) {
     _playerStateController.add(state);
     // ignore: deprecated_member_use_from_same_package
     audioPlayerStateChangeHandler?.call(state);
@@ -203,7 +203,7 @@ class AudioPlayer {
   }
 
   /// Stream of changes on player state.
-  Stream<AudioPlayerState> get onPlayerStateChanged =>
+  Stream<AudioPlayerState?> get onPlayerStateChanged =>
       _playerStateController.stream;
 
   /// Stream of changes on player state coming from notification area in iOS.
@@ -240,7 +240,7 @@ class AudioPlayer {
   /// Stream of player errors.
   ///
   /// Events are sent when an unexpected error is thrown in the native code.
-  Stream<String> get onPlayerError => _errorController.stream;
+  Stream<String?> get onPlayerError => _errorController.stream;
 
   /// Stream of remote player command send by native side
   ///
@@ -249,7 +249,7 @@ class AudioPlayer {
 
   /// Handler of changes on player state.
   @deprecated
-  AudioPlayerStateChangeHandler audioPlayerStateChangeHandler;
+  AudioPlayerStateChangeHandler? audioPlayerStateChangeHandler;
 
   /// Handler of changes on player position.
   ///
@@ -260,7 +260,7 @@ class AudioPlayer {
   ///
   /// This is deprecated. Use [onAudioPositionChanged] instead.
   @deprecated
-  TimeChangeHandler positionHandler;
+  TimeChangeHandler? positionHandler;
 
   /// Handler of changes on audio duration.
   ///
@@ -269,7 +269,7 @@ class AudioPlayer {
   ///
   /// This is deprecated. Use [onDurationChanged] instead.
   @deprecated
-  TimeChangeHandler durationHandler;
+  TimeChangeHandler? durationHandler;
 
   /// Handler of player completions.
   ///
@@ -280,7 +280,7 @@ class AudioPlayer {
   ///
   /// This is deprecated. Use [onPlayerCompletion] instead.
   @deprecated
-  VoidCallback completionHandler;
+  VoidCallback? completionHandler;
 
   /// Handler of seek completion.
   ///
@@ -288,7 +288,7 @@ class AudioPlayer {
   ///
   /// This is deprecated. Use [onSeekComplete] instead.
   @deprecated
-  SeekHandler seekCompleteHandler;
+  SeekHandler? seekCompleteHandler;
 
   /// Handler of player errors.
   ///
@@ -296,12 +296,12 @@ class AudioPlayer {
   ///
   /// This is deprecated. Use [onPlayerError] instead.
   @deprecated
-  ErrorHandler errorHandler;
+  ErrorHandler? errorHandler;
 
   /// An unique ID generated for this instance of [AudioPlayer].
   ///
   /// This is used to properly exchange messages with the [MethodChannel].
-  String playerId;
+  String? playerId;
 
   /// Current mode of the audio player. Can be updated at any time, but is going
   /// to take effect only at the next time you play the audio.
@@ -318,7 +318,7 @@ class AudioPlayer {
       // a callback managed by the Flutter engine, which allows for us to pass
       // references to our callbacks between isolates.
       final CallbackHandle handle =
-          PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher);
+          PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher)!;
       assert(handle != null, 'Unable to lookup callback.');
       _invokeMethod('startHeadlessService', {
         'handleKey': <dynamic>[handle.toRawHandle()],
@@ -328,7 +328,7 @@ class AudioPlayer {
 
   Future<int> _invokeMethod(
     String method, [
-    Map<String, dynamic> arguments,
+    Map<String, dynamic>? arguments,
   ]) {
     arguments ??= const {};
 
@@ -344,14 +344,14 @@ class AudioPlayer {
   /// this should be called after initiating AudioPlayer only if you want to
   /// listen for notification changes in the background. Not implemented on macOS
   void startHeadlessService() {
-    if (this == null || playerId.isEmpty) {
+    if (this == null || playerId!.isEmpty) {
       return;
     }
     // Start the headless audio service. The parameter here is a handle to
     // a callback managed by the Flutter engine, which allows for us to pass
     // references to our callbacks between isolates.
     final CallbackHandle handle =
-        PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher);
+        PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher)!;
     assert(handle != null, 'Unable to lookup callback.');
     _invokeMethod('startHeadlessService', {
       'handleKey': <dynamic>[handle.toRawHandle()]
@@ -370,7 +370,7 @@ class AudioPlayer {
     if (callback == null) {
       throw ArgumentError.notNull('callback');
     }
-    final CallbackHandle handle = PluginUtilities.getCallbackHandle(callback);
+    final CallbackHandle handle = PluginUtilities.getCallbackHandle(callback)!;
 
     await _invokeMethod('monitorNotificationStateChanges', {
       'handleMonitorKey': <dynamic>[handle.toRawHandle()]
@@ -387,10 +387,10 @@ class AudioPlayer {
   /// respectSilence and stayAwake are not implemented on macOS.
   Future<int> play(
     String url, {
-    bool isLocal,
+    bool? isLocal,
     double volume = 1.0,
     // position must be null by default to be compatible with radio streams
-    Duration position,
+    Duration? position,
     bool respectSilence = false,
     bool stayAwake = false,
     bool duckAudio = false,
@@ -426,11 +426,11 @@ class AudioPlayer {
     Uint8List bytes, {
     double volume = 1.0,
     // position must be null by default to be compatible with radio streams
-    Duration position,
+    Duration? position,
     bool respectSilence = false,
-    bool stayAwake = false,
+    bool? stayAwake = false,
     bool duckAudio = false,
-    bool recordingActive = false,
+    bool? recordingActive = false,
   }) async {
     volume ??= 1.0;
     respectSilence ??= false;
@@ -551,10 +551,10 @@ class AudioPlayer {
   ///
   /// Specify atleast title
   Future<dynamic> setNotification({
-    String title,
-    String albumTitle,
-    String artist,
-    String imageUrl,
+    String? title,
+    String? albumTitle,
+    String? artist,
+    String? imageUrl,
     Duration forwardSkipInterval = Duration.zero,
     Duration backwardSkipInterval = Duration.zero,
     Duration duration = Duration.zero,
@@ -622,8 +622,8 @@ class AudioPlayer {
     final Map<dynamic, dynamic> callArgs = call.arguments as Map;
     _log('_platformCallHandler call ${call.method} $callArgs');
 
-    final playerId = callArgs['playerId'] as String;
-    final AudioPlayer player = players[playerId];
+    final playerId = callArgs['playerId'] as String?;
+    final AudioPlayer? player = players[playerId];
 
     if (!kReleaseMode && Platform.isAndroid && player == null) {
       final oldPlayer = AudioPlayer(playerId: playerId);

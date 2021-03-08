@@ -34,7 +34,7 @@ void main() {
 
       await player1.play('internet.com/file.mp3');
       MethodCall call = popCall();
-      String player1Id = call.arguments['playerId'];
+      String? player1Id = call.arguments['playerId'];
       expect(call.method, 'play');
       expect(call.arguments['url'], 'internet.com/file.mp3');
 

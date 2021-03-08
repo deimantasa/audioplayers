@@ -27,7 +27,7 @@ class AudioCache {
   ///
   /// If not set, the AudioCache will create and return a new instance of AudioPlayer every call, allowing for simultaneous calls.
   /// If this is set, every call will overwrite previous calls.
-  AudioPlayer fixedPlayer;
+  AudioPlayer? fixedPlayer;
 
   /// This flag should be set to true, if player is used for playing internal notifications
   ///
@@ -85,14 +85,14 @@ class AudioCache {
   /// Loads all the [fileNames] provided to the cache.
   ///
   /// Also returns a list of [Future]s for those files.
-  Future<List<File>> loadAll(List<String> fileNames) async {
+  Future<List<File?>> loadAll(List<String> fileNames) async {
     return Future.wait(fileNames.map(load));
   }
 
   /// Loads a single [fileName] to the cache.
   ///
   /// Also returns a [Future] to access that file.
-  Future<File> load(String fileName) async {
+  Future<File?> load(String fileName) async {
     if (!loadedFiles.containsKey(fileName)) {
       loadedFiles[fileName] = await fetchToMemory(fileName);
     }
@@ -113,11 +113,11 @@ class AudioCache {
   Future<AudioPlayer> play(
     String fileName, {
     double volume = 1.0,
-    bool isNotification,
+    bool? isNotification,
     PlayerMode mode = PlayerMode.MEDIA_PLAYER,
     bool stayAwake = false,
     bool recordingActive = false,
-    bool duckAudio,
+    bool? duckAudio,
   }) async {
     String url = await getAbsoluteUrl(fileName);
     AudioPlayer player = _player(mode);
@@ -139,11 +139,11 @@ class AudioCache {
   Future<AudioPlayer> playBytes(
     Uint8List fileBytes, {
     double volume = 1.0,
-    bool isNotification,
+    bool? isNotification,
     PlayerMode mode = PlayerMode.MEDIA_PLAYER,
     bool loop = false,
-    bool stayAwake,
-    bool recordingActive,
+    bool? stayAwake,
+    bool? recordingActive,
   }) async {
     AudioPlayer player = _player(mode);
 
@@ -169,7 +169,7 @@ class AudioCache {
   Future<AudioPlayer> loop(
     String fileName, {
     double volume = 1.0,
-    bool isNotification,
+    bool? isNotification,
     PlayerMode mode = PlayerMode.MEDIA_PLAYER,
     bool stayAwake = false,
   }) async {
@@ -189,7 +189,7 @@ class AudioCache {
     if (kIsWeb) {
       return 'assets/$prefix$fileName';
     }
-    File file = await load(fileName);
+    File file = await (load(fileName) as FutureOr<File>);
     return file.path;
   }
 }
