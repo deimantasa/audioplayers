@@ -119,7 +119,8 @@ void _backgroundCallbackDispatcher() {
 
     final Map<dynamic, dynamic>? callArgs = call.arguments as Map?;
     if (call.method == 'audio.onNotificationBackgroundPlayerStateChanged') {
-      onAudioChangeBackgroundEvent ??= _performCallbackLookup() as dynamic Function(AudioPlayerState)?;
+      onAudioChangeBackgroundEvent ??=
+          _performCallbackLookup() as dynamic Function(AudioPlayerState)?;
       final String? playerState = callArgs!['value'];
       if (playerState == 'playing') {
         onAudioChangeBackgroundEvent!(AudioPlayerState.PLAYING);
@@ -305,10 +306,13 @@ class AudioPlayer {
 
   /// Current mode of the audio player. Can be updated at any time, but is going
   /// to take effect only at the next time you play the audio.
-  PlayerMode mode;
+  PlayerMode? mode;
 
   /// Creates a new instance and assigns an unique id to it.
-  AudioPlayer({this.mode = PlayerMode.MEDIA_PLAYER, this.playerId}) {
+  AudioPlayer({
+    this.mode = PlayerMode.MEDIA_PLAYER,
+    this.playerId,
+  }) {
     this.mode ??= PlayerMode.MEDIA_PLAYER;
     this.playerId ??= _uuid.v4();
     players[playerId] = this;
@@ -317,11 +321,11 @@ class AudioPlayer {
       // Start the headless audio service. The parameter here is a handle to
       // a callback managed by the Flutter engine, which allows for us to pass
       // references to our callbacks between isolates.
-      final CallbackHandle handle =
-          PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher)!;
+      final CallbackHandle? handle =
+          PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher);
       assert(handle != null, 'Unable to lookup callback.');
       _invokeMethod('startHeadlessService', {
-        'handleKey': <dynamic>[handle.toRawHandle()],
+        'handleKey': <dynamic>[handle?.toRawHandle()],
       });
     }
   }
@@ -344,17 +348,17 @@ class AudioPlayer {
   /// this should be called after initiating AudioPlayer only if you want to
   /// listen for notification changes in the background. Not implemented on macOS
   void startHeadlessService() {
-    if (this == null || playerId!.isEmpty) {
+    if (playerId!.isEmpty) {
       return;
     }
     // Start the headless audio service. The parameter here is a handle to
     // a callback managed by the Flutter engine, which allows for us to pass
     // references to our callbacks between isolates.
-    final CallbackHandle handle =
-        PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher)!;
+    final CallbackHandle? handle =
+        PluginUtilities.getCallbackHandle(_backgroundCallbackDispatcher);
     assert(handle != null, 'Unable to lookup callback.');
     _invokeMethod('startHeadlessService', {
-      'handleKey': <dynamic>[handle.toRawHandle()]
+      'handleKey': <dynamic>[handle?.toRawHandle()]
     });
 
     return;
@@ -365,7 +369,7 @@ class AudioPlayer {
   /// `callback` is invoked on a background isolate and will not have direct
   /// access to the state held by the main isolate (or any other isolate).
   Future<bool> monitorNotificationStateChanges(
-    void Function(AudioPlayerState value) callback,
+    void Function(AudioPlayerState value)? callback,
   ) async {
     if (callback == null) {
       throw ArgumentError.notNull('callback');
@@ -388,28 +392,30 @@ class AudioPlayer {
   Future<int> play(
     String url, {
     bool? isLocal,
-    double volume = 1.0,
+    double? volume,
     // position must be null by default to be compatible with radio streams
     Duration? position,
-    bool respectSilence = false,
-    bool stayAwake = false,
-    bool duckAudio = false,
-    bool recordingActive = false,
+    bool? respectSilence,
+    bool? stayAwake,
+    bool? duckAudio,
+    bool? recordingActive,
   }) async {
     isLocal ??= isLocalUrl(url);
     volume ??= 1.0;
     respectSilence ??= false;
     stayAwake ??= false;
+    duckAudio ??= false;
+    recordingActive ??= false;
 
     final int result = await _invokeMethod('play', {
       'url': url,
       'isLocal': isLocal,
       'volume': volume,
       'position': position?.inMilliseconds,
-      'respectSilence': respectSilence ?? false,
-      'stayAwake': stayAwake ?? false,
-      'duckAudio': duckAudio ?? false,
-      'recordingActive': recordingActive ?? false,
+      'respectSilence': respectSilence,
+      'stayAwake': stayAwake,
+      'duckAudio': duckAudio,
+      'recordingActive': recordingActive,
     });
 
     if (result == 1) {
@@ -424,17 +430,19 @@ class AudioPlayer {
   /// This is only supported on Android currently.
   Future<int> playBytes(
     Uint8List bytes, {
-    double volume = 1.0,
+    double? volume,
     // position must be null by default to be compatible with radio streams
     Duration? position,
-    bool respectSilence = false,
-    bool? stayAwake = false,
-    bool duckAudio = false,
-    bool? recordingActive = false,
+    bool? respectSilence,
+    bool? stayAwake,
+    bool? duckAudio,
+    bool? recordingActive,
   }) async {
     volume ??= 1.0;
     respectSilence ??= false;
     stayAwake ??= false;
+    duckAudio ??= false;
+    recordingActive ??= false;
 
     if (!Platform.isAndroid) {
       throw PlatformException(

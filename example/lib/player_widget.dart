@@ -41,8 +41,8 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   get _isPlaying => _playerState == PlayerState.playing;
   get _isPaused => _playerState == PlayerState.paused;
-  get _durationText => _duration?.toString()?.split('.')?.first ?? '';
-  get _positionText => _position?.toString()?.split('.')?.first ?? '';
+  get _durationText => _duration?.toString().split('.').first ?? '';
+  get _positionText => _position?.toString().split('.').first ?? '';
 
   get _isPlayingThroughEarpiece =>
       _playingRouteState == PlayingRouteState.earpiece;
@@ -122,7 +122,8 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                     value: (_position != null &&
                             _duration != null &&
                             _position!.inMilliseconds > 0 &&
-                            _position!.inMilliseconds < _duration!.inMilliseconds)
+                            _position!.inMilliseconds <
+                                _duration!.inMilliseconds)
                         ? _position!.inMilliseconds / _duration!.inMilliseconds
                         : 0.0,
                   ),

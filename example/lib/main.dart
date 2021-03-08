@@ -180,7 +180,6 @@ class _ExampleAppState extends State<ExampleApp> {
               'audio2.mp3 duration is: ${Duration(milliseconds: snapshot.data!)}',
             );
         }
-        return null; // unreachable
       },
     );
   }
@@ -437,16 +436,20 @@ class _Tab extends StatelessWidget {
 }
 
 class _Btn extends StatelessWidget {
-  final String? txt;
+  final String txt;
   final VoidCallback? onPressed;
 
-  const _Btn({Key? key, this.txt, this.onPressed}) : super(key: key);
+  const _Btn({
+    Key? key,
+    required this.txt,
+    this.onPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ButtonTheme(
       minWidth: 48.0,
-      child: RaisedButton(child: Text(txt!), onPressed: onPressed),
+      child: RaisedButton(child: Text(txt), onPressed: onPressed),
     );
   }
 }
