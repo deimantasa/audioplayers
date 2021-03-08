@@ -8,11 +8,11 @@ enum PlayerState { stopped, playing, paused }
 enum PlayingRouteState { speakers, earpiece }
 
 class PlayerWidget extends StatefulWidget {
-  final String url;
+  final String? url;
   final PlayerMode mode;
 
   PlayerWidget(
-      {Key key, @required this.url, this.mode = PlayerMode.MEDIA_PLAYER})
+      {Key? key, required this.url, this.mode = PlayerMode.MEDIA_PLAYER})
       : super(key: key);
 
   @override
@@ -22,22 +22,22 @@ class PlayerWidget extends StatefulWidget {
 }
 
 class _PlayerWidgetState extends State<PlayerWidget> {
-  String url;
+  String? url;
   PlayerMode mode;
 
-  AudioPlayer _audioPlayer;
-  AudioPlayerState _audioPlayerState;
-  Duration _duration;
-  Duration _position;
+  late AudioPlayer _audioPlayer;
+  AudioPlayerState? _audioPlayerState;
+  Duration? _duration;
+  Duration? _position;
 
   PlayerState _playerState = PlayerState.stopped;
   PlayingRouteState _playingRouteState = PlayingRouteState.speakers;
-  StreamSubscription _durationSubscription;
-  StreamSubscription _positionSubscription;
-  StreamSubscription _playerCompleteSubscription;
-  StreamSubscription _playerErrorSubscription;
-  StreamSubscription _playerStateSubscription;
-  StreamSubscription<PlayerControlCommand> _playerControlCommandSubscription;
+  StreamSubscription? _durationSubscription;
+  StreamSubscription? _positionSubscription;
+  StreamSubscription? _playerCompleteSubscription;
+  StreamSubscription? _playerErrorSubscription;
+  StreamSubscription? _playerStateSubscription;
+  StreamSubscription<PlayerControlCommand>? _playerControlCommandSubscription;
 
   get _isPlaying => _playerState == PlayerState.playing;
   get _isPaused => _playerState == PlayerState.paused;
@@ -115,15 +115,15 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                 children: [
                   Slider(
                     onChanged: (v) {
-                      final Position = v * _duration.inMilliseconds;
+                      final Position = v * _duration!.inMilliseconds;
                       _audioPlayer
                           .seek(Duration(milliseconds: Position.round()));
                     },
                     value: (_position != null &&
                             _duration != null &&
-                            _position.inMilliseconds > 0 &&
-                            _position.inMilliseconds < _duration.inMilliseconds)
-                        ? _position.inMilliseconds / _duration.inMilliseconds
+                            _position!.inMilliseconds > 0 &&
+                            _position!.inMilliseconds < _duration!.inMilliseconds)
+                        ? _position!.inMilliseconds / _duration!.inMilliseconds
                         : 0.0,
                   ),
                 ],
@@ -216,11 +216,11 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   Future<int> _play() async {
     final playPosition = (_position != null &&
             _duration != null &&
-            _position.inMilliseconds > 0 &&
-            _position.inMilliseconds < _duration.inMilliseconds)
+            _position!.inMilliseconds > 0 &&
+            _position!.inMilliseconds < _duration!.inMilliseconds)
         ? _position
         : null;
-    final result = await _audioPlayer.play(url, position: playPosition);
+    final result = await _audioPlayer.play(url!, position: playPosition);
     if (result == 1) setState(() => _playerState = PlayerState.playing);
 
     // default playback rate is 1.0
